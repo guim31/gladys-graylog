@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-25
+
 ### Added
 
 - One device per Graylog event definition: its events of the last 24 hours,
@@ -30,3 +32,6 @@ the notes of the version's GitHub Release.
   self-signed certificates supported.
 - Feature names, messages and documentation in English, French, German and
   Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-graylog/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-graylog/releases/tag/v1.0.0
