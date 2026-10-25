@@ -32,15 +32,20 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/app.js                        registers every handler on the hub (also used by the tests)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+src/graylog/http.js               the one network function (node:http/https, test seam)
+src/graylog/client.js             Graylog REST API: snapshot(), error kinds
+src/hub.js                        reading timer, states, scene events, connection status
+src/devices.js                    the "Graylog" device and one device per event definition
+src/scenes.js                     scene action handler (manifest `scene_actions`)
+src/widgets.js                    dashboard widget handler (manifest `widgets`)
+src/store.js                      /data/graylog-state.json: what was already announced
+src/texts.js, src/logs.js         four-language texts; one log line per failure, not per cycle
+gladys-assistant-integration.json manifest: name, config_schema, triggers, actions, widget...
+docs/en.md, fr.md, de.md, es.md   user documentation, re-hosted by Gladys (same sections)
+test/                             node --test, against the SDK's fake Gladys and a fake Graylog
+test/fixtures/graylog/            real answers of Graylog 6.1.16, anonymized
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +75,10 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** is in English, French, German ("du") and Spanish
+  ("usted"): action messages, manifest texts, widget texts, feature names,
+  and `docs/en.md`, `fr.md`, `de.md`, `es.md`, kept in sync
+  (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +240,31 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Graylog (vérifié sur Graylog 6.1.16, 25/10/2026)
+
+- **Authentification** : HTTP Basic, jeton d'accès en `<jeton>:token` (ou utilisateur et mot de passe).
+  Graylog refuse un POST sans `X-Requested-By` (protection CSRF). Les deux POST utilisés
+  (`cluster/metrics/multiple`, `events/search`) ne modifient rien.
+- **Une adresse fausse sous `/api` répond la page HTML de l'interface web en 200** : un corps non JSON =
+  « pas une API Graylog ». OpenSearch sur le port répond 400 en JSON : classé pareil par `detect()`.
+- **Pas de `/cluster/throughput`** (404) : le débit de tout le cluster vient de
+  `POST /cluster/metrics/multiple` (`org.graylog2.throughput.input.1-sec-rate`, le « In » de l'en-tête ;
+  métrique absente tant qu'aucun message n'est arrivé : 0), le retard du journal de
+  `org.graylog2.journal.entries-uncommitted`. Repli sur `/system/throughput` et `/system/journal` (ce nœud).
+- **Droits** : il n'existe pas de rôle « lecture des événements ». Avec le seul rôle **Reader**, la liste des
+  définitions est vide et `events/search` ne rend que les notifications système. Il faut partager (Viewer) les
+  définitions, le flux « All events » (`000000000000000000000002`) **et les flux sources** des événements
+  (`source_streams`, souvent « Default Stream » `000000000000000000000001`) : sans ce dernier, l'événement
+  reste invisible. Entrées, métriques et santé du stockage passent avec Reader.
+- **Alerte ou événement** : le champ `alert` est celui de la définition (l'interface le met à vrai quand elle a
+  des notifications) ; une définition créée par l'API avec des notifications mais `alert: false` produit des
+  événements `alert: false`.
+- **Identifiants** : un événement a un ULID, une définition un ObjectId stable au renommage. Un événement
+  d'agrégation porte l'heure de sa fenêtre et peut être stocké après un plus récent : les nouveaux événements
+  se repèrent par identifiant (vus sur 24 h, gardés dans `/data`), jamais par date.
+- **Entrées** : `cluster/inputstates` = `{ nodeId: [états] }`. En échec : `FAILED`, `FAILING`,
+  `INVALID_CONFIGURATION` ; `STOPPED` est un arrêt volontaire (pas de déclencheur, pas de « repart »).
+- Le message d'un événement d'agrégation est le titre de sa définition.
+- Priorité d'une définition : 1 basse, 2 normale, 3 haute ; l'API accepte 4 (affiché « critique » ici,
+  libellé de l'interface 6.1 non vérifié).

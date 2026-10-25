@@ -1,67 +1,206 @@
-# Template de démonstration
+# Graylog
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Votre serveur de logs [Graylog](https://graylog.org/) dans Gladys : chaque
+définition d'événement devient un appareil (ses événements des dernières
+24 heures, la date du dernier), un appareil « Graylog » surveille le serveur
+lui-même (messages par seconde, entrées en échec, stockage en rouge, retard du
+journal, événements et alertes du jour), et vos scènes réagissent quand une
+alerte se déclenche : une lumière rouge quand « Disk failure » se déclenche, un
+message quand une entrée ne reçoit plus de logs ou quand OpenSearch passe au
+rouge. Une action de scène lit les dernières alertes pour un message, et un
+widget du tableau de bord les affiche.
 
-## Ce que vous obtenez
+L'intégration lit l'API REST de Graylog (port 9000) sur votre réseau local,
+avec un jeton d'accès. Elle ne fait que lire : rien n'est modifié dans
+Graylog. Rien ne passe par un cloud.
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+Testé contre un vrai Graylog 6.1 (image Docker officielle
+`graylog/graylog:6.1`, MongoDB 6, OpenSearch 2.15) : entrées GELF et Syslog,
+une entrée qui échoue au démarrage, deux définitions d'événement alimentées par
+des messages GELF, dont une avec notification (une alerte), un utilisateur
+Reader avec des flux partagés. Graylog 5 a la même API mais n'a pas été testé.
+Vos retours sont les bienvenus :
+[github.com/guim31/gladys-graylog/issues](https://github.com/guim31/gladys-graylog/issues).
 
-## Configuration
+## Ce qu'il vous faut
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+- Gladys Assistant 5.1.0 ou plus récent.
+- Graylog 6 (Open, Enterprise ou Security), joignable depuis la machine de
+  Gladys, sur le port 9000 ou derrière un reverse proxy.
+- Un utilisateur Graylog pour Gladys et son jeton d'accès. Évitez le compte
+  `admin` : l'intégration n'a besoin que de lire.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+## Mise en route
 
-## Actions
+### 1. Créer un utilisateur pour Gladys
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Dans Graylog :
 
-## Scènes
+1. **System → Users and Teams → Create user** : un utilisateur `gladys` avec
+   le rôle **Reader**.
+2. Partagez-lui, en **Viewer** (bouton **Share** de chaque élément) :
+   - chaque définition d'événement à suivre (**Alerts → Event Definitions**) ;
+   - le flux **All events**, où sont stockés les événements ;
+   - les flux que ces définitions fouillent (souvent **Default Stream**) :
+     Graylog ne montre un événement qu'à un utilisateur qui peut lire les
+     messages à son origine.
+3. Sur l'utilisateur `gladys` : **Edit tokens**, créez un jeton nommé
+   `gladys` et copiez-le (il n'est affiché qu'une fois).
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+L'état des entrées, le débit et la santé du stockage ne demandent aucun
+partage. Vérifié sur Graylog 6.1 : avec le seul rôle Reader, les définitions
+ne sont pas listées et seules les notifications système sont visibles.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+### 2. Configurer l'intégration
+
+Dans Gladys, **Intégrations → Graylog → Configuration** :
+
+- **Adresse** : l'adresse de l'interface web de Graylog, par exemple
+  `192.168.1.2` (http:// et le port 9000 sont ajoutés), `graylog.lan:9000`, ou
+  `https://logs.example.org` derrière un reverse proxy. Une adresse copiée
+  depuis le navigateur convient aussi.
+- **Jeton d'accès** : le jeton de l'étape 1. Sans jeton, remplissez plutôt
+  **Utilisateur (sans jeton)** et **Mot de passe (sans jeton)**.
+- **Intervalle de rafraîchissement** : fréquence de lecture de Graylog
+  (1 minute par défaut ; cinq ou six requêtes d'API à chaque fois).
+- **Accepter les certificats auto-signés** : seulement pour une adresse
+  `https://` dont le certificat n'est pas reconnu par votre système.
+- **Langue des noms** : langue des noms des fonctionnalités (fixés à l'ajout
+  d'un appareil), des dates et des résultats de scène.
+
+Enregistrez, puis **Tester la connexion** : la réponse donne la version de
+Graylog, les messages par seconde, les entrées en échec, le nombre de
+définitions d'événement et les alertes des dernières 24 heures.
+
+### 3. Ajouter les appareils
+
+Dans l'onglet **Découverte**, ajoutez l'appareil « Graylog » et les définitions
+d'événement à suivre. Rien n'est créé à votre place. Les déclencheurs, l'action
+de scène et le widget valent pour toutes les définitions, ajoutées ou non.
+
+## Les appareils
+
+**Graylog** (le serveur, ou tout le cluster) :
+
+| Fonctionnalité                | Signification                                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Messages par seconde          | Messages reçus par seconde, tous les nœuds ensemble (le « In » de l'en-tête de Graylog).                                             |
+| Entrées en échec              | Entrées FAILED, FAILING ou mal configurées, sur n'importe quel nœud. Une entrée arrêtée volontairement ne compte pas.                |
+| Stockage en rouge             | 1 quand le cluster OpenSearch / Elasticsearch est rouge (les messages ne sont plus stockés). Le jaune, courant sur un nœud, donne 0. |
+| Messages en attente (journal) | Messages écrits dans le journal disque et pas encore traités : un nombre qui grossit veut dire que Graylog ne suit plus.             |
+| Événements (24 h)             | Événements des dernières 24 heures, toutes définitions.                                                                              |
+| Alertes (24 h)                | Les alertes parmi eux (événements d'une définition avec notifications).                                                              |
+
+**Un appareil par définition d'événement** :
+
+| Fonctionnalité    | Signification                                                                           |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| Événements (24 h) | Ses événements des dernières 24 heures.                                                 |
+| Dernier événement | Date et heure de son dernier événement, dans le fuseau de Gladys (dernières 24 heures). |
+
+L'appareil d'une définition porte son titre dans Graylog. La définition
+« System notification events » (les notifications de Graylog lui-même : une
+entrée qui ne démarre pas, un disque plein, une version dépassée…) est
+proposée aussi.
 
 ## Tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Le widget **Alertes Graylog** montre d'un coup d'œil :
+
+- trois chiffres : les alertes des dernières 24 heures, les entrées en échec
+  et les messages par seconde ;
+- les problèmes de Graylog lui-même : chaque entrée en échec, le stockage quand
+  il est jaune ou rouge ;
+- les dernières alertes, la plus récente en premier, avec leur heure.
+
+Dans ses réglages, choisissez les définitions d'événement à afficher (vide :
+toutes) et les **Lignes** : **Alertes seulement** (par défaut) ou **Alertes et
+événements**. Le bouton **Actualiser** relit Graylog. Le widget fonctionne
+avant tout ajout d'appareil.
+
+## Scènes
+
+### Déclencheurs
+
+- **Un événement Graylog se déclenche** : un nouvel événement d'une
+  définition. Filtres : les définitions (vide : toutes), la nature
+  (**Alerte** : une définition avec notifications, **Événement** : sans) et la
+  priorité. Variables : la définition, le message, la nature, la priorité, la
+  source, la clé de l'événement.
+- **Une entrée tombe en échec** : une entrée passe FAILED, FAILING ou mal
+  configurée ; ses messages sont perdus. Variables : l'entrée, son type, son
+  état, l'erreur.
+- **Une entrée repart** : une entrée signalée en échec est de nouveau RUNNING.
+  Variables : l'entrée, son type, la durée en minutes.
+- **Le stockage passe au rouge** : le cluster OpenSearch / Elasticsearch de
+  Graylog est rouge.
+- **Le stockage n'est plus rouge** : retour au jaune ou au vert. Variables : la
+  santé, la durée en minutes.
+- **Graylog ne répond plus** : l'API n'a pas répondu deux fois de suite (à
+  15 secondes d'écart environ). Un jeton refusé ne le déclenche pas : le statut
+  de l'intégration le dit.
+
+Chaque événement est annoncé une fois, même après un redémarrage de Gladys ou
+de l'intégration (les identifiants déjà annoncés sont gardés dans `/data`).
+Les événements déjà présents au démarrage de l'intégration ne sont pas
+annoncés.
+
+### Action
+
+**Lire les dernières alertes** compte et liste les alertes des dernières
+24 heures, d'une définition ou de toutes ; réglez **Quoi** sur **Alertes et
+événements** pour inclure les événements sans notification. Sorties : le
+nombre, la définition et le message de la dernière, il y a combien de minutes
+(-1 s'il n'y en a pas), et une liste (« Disk failure (14:32), … », dix au
+plus).
+
+### Idées de scènes
+
+- **Un événement Graylog se déclenche** (définition « Disk failure », nature
+  Alerte) → passer la lumière du bureau en rouge et envoyer un message
+  « Graylog : {{message}} ».
+- **Une entrée tombe en échec** → envoyer un message : « Graylog ne reçoit
+  plus {{input}} : {{message}} ». Puis **Une entrée repart** → « {{input}} est
+  revenue après {{duration_minutes}} min ».
+- Chaque matin à 8 h → **Lire les dernières alertes** → envoyer
+  « {{count}} alerte(s) cette nuit : {{names}} ».
+- **Le stockage passe au rouge** → prévenir toute la maison : des logs sont
+  perdus.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« jeton d'accès, utilisateur ou mot de passe refusé »** : le jeton a été
+  révoqué ou mal recopié. Créez-en un autre (**Edit tokens**).
+- **« pas d'API Graylog à cette adresse »** : vérifiez le port (9000 par
+  défaut), et le chemin d'un reverse proxy (`https://example.org/graylog`).
+- **« Graylog ne répond pas »** : la machine de Gladys ne joint pas Graylog
+  (pare-feu, Graylog arrêté, réseau Docker). Essayez `curl
+http://<adresse>:9000/api/system/lbstatus` depuis la machine de Gladys.
+- **« certificat refusé »** : cochez **Accepter les certificats auto-signés**,
+  ou utilisez un certificat reconnu.
+- **Aucune définition d'événement dans l'onglet Découverte, ou 0 événement
+  alors que Graylog en montre** : l'utilisateur ne les voit pas. Partagez-lui
+  les définitions, le flux **All events** et les flux que fouillent les
+  définitions (étape 1).
+- **« permission manquante »** : il manque une permission à l'utilisateur sur
+  les pages système ; le rôle Reader les couvre.
+- Pour voir ce que fait l'intégration, réglez `LOG_LEVEL=debug` sur son
+  conteneur.
+
+## Limites
+
+- Lecture seule : l'intégration ne modifie pas Graylog et n'acquitte pas les
+  événements (Graylog Open n'a pas d'acquittement).
+- Un événement est vu à la lecture suivante (1 minute par défaut), et Graylog
+  lui-même exécute une définition toutes les minutes ou plus : comptez jusqu'à
+  quelques minutes entre une ligne de log et la scène.
+- Les 200 derniers événements des dernières 24 heures sont lus à chaque cycle :
+  les compteurs restent exacts au-delà (Graylog les compte), mais une rafale de
+  plus de 200 événements entre deux lectures n'annonce que les 200 derniers. Au
+  plus 30 événements de scène partent par lecture ; la suite part aux lectures
+  suivantes.
+- Le message d'un événement est celui qu'écrit Graylog : pour une agrégation
+  (la définition « Filter & Aggregation » habituelle), son titre.
+- L'état des entrées et la santé du stockage passent par l'API de Graylog
+  lui-même : un utilisateur sans le rôle Reader n'y voit rien.
+- Graylog 5 devrait fonctionner (même API) mais n'a pas été testé.
