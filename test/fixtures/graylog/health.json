@@ -1,0 +1,9 @@
+{
+  "status": "green",
+  "shards": {
+    "active": 6,
+    "initializing": 0,
+    "relocating": 0,
+    "unassigned": 0
+  }
+}

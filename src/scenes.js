@@ -1,41 +1,72 @@
 // -----------------------------------------------------------------------------
-// Scene actions (SDK v0.14+, Gladys 5.1+).
+// Scene action handler (manifest `scene_actions`, Gladys 5.1+).
 //
-// A scene action is an OPERATION a scene author places in a scene, with
-// parameters and a result: "identify this device", "take a snapshot", "clean
-// these rooms". Each one is declared in the manifest `scene_actions` field
-// (key, label, `fields` in the config_schema grammar, scalar `outputs`) and
-// handled here, keyed by that same `key`; index.js registers every entry with
-// `gladys.onSceneAction(key, ...)`.
-//
-// Scene TRIGGERS are the other direction ("this happened"): they are fired by
-// the device that observes the event, see src/devices/motionSensor.js.
-//
-// The rules that matter:
-//   - `fields` arrive RESOLVED: scene variables substituted, defaults applied,
-//     validated by the core; a `"source": "devices"` field is the chosen
-//     device external_id;
-//   - resolve an object of the declared `outputs` (scalars only), readable by
-//     the following actions of the scene, or `undefined` for none. Keys not
-//     declared in the manifest are dropped by the core;
-//   - throwing fails THIS action only: the scene logs it and continues. A
-//     scene action is never a condition: return an output and let the scene
-//     author gate on it;
-//   - never fire a scene event as a consequence of a received action: a scene
-//     bound to that event would loop through the integration.
+// "Are there alerts?" is already a scene condition on the device features.
+// This action does what a condition cannot: put the latest alerts (or
+// events) in words for a message ("2 alert(s): Disk failure at 14:32…"),
+// of one event definition or of all, added to Gladys or not, with the
+// message of the last one. It reads Graylog again when the last read is
+// older than 15 seconds.
 // -----------------------------------------------------------------------------
 
-import { createLogger } from '@gladysassistant/integration-sdk';
-import { signalDevice } from './devices/index.js';
+import { ERROR_KINDS } from './graylog/client.js';
+import { ACTION_TEXT, ERROR_TEXT, pick } from './texts.js';
 
-const logger = createLogger({ name: 'scenes' });
+// Events listed in the `names` output, at most (the rest is counted).
+export const MAX_LISTED = 10;
+
+export const SCOPES = Object.freeze({ ALERTS: 'alerts', ALL: 'all' });
+
+const TIME = { en: 'en-GB', fr: 'fr-FR', de: 'de-DE', es: 'es-ES' };
+const clock = (timestamp, language) =>
+  new Intl.DateTimeFormat(TIME[language] ?? 'en-GB', { timeStyle: 'short' }).format(
+    new Date(timestamp),
+  );
+
+function assertReadable(hub) {
+  const language = hub.config?.language;
+  if (!hub.client) {
+    throw new Error(pick(ACTION_TEXT.noServer, language));
+  }
+  if (hub.error || !hub.data) {
+    throw new Error(pick(ERROR_TEXT[hub.error?.kind ?? ERROR_KINDS.UNREACHABLE], language));
+  }
+}
 
 export const SCENE_ACTIONS = {
-  // The ack is awaited under the action's `timeout_seconds` (15 s in the
-  // manifest), counted from the moment the scene reaches the action.
-  async identify_device(gladys, { fields, config }) {
-    logger.info(`Scene action identify_device <- ${fields.device}`);
-    const signalled = await signalDevice(gladys, fields.device, config);
-    return { signalled };
+  async get_alerts(hub, { fields = {} }) {
+    const language = hub.config?.language;
+    if (!hub.client) {
+      throw new Error(pick(ACTION_TEXT.noServer, language));
+    }
+    await hub.refreshIfStale();
+    assertReadable(hub);
+    let scope = null;
+    if (fields.device) {
+      const definition = hub.findDefinition(fields.device);
+      if (!definition) {
+        throw new Error(pick(ACTION_TEXT.unknownDefinition, language));
+      }
+      scope = new Set([definition.id]);
+    }
+    const all = fields.include === SCOPES.ALL;
+    const events = hub.recentEvents({ scope, all });
+    const count = hub.countEvents({ scope, all, listed: events.length });
+    const listed = events
+      .slice(0, MAX_LISTED)
+      .map((event) => `${event.title || event.definitionId} (${clock(event.timestamp, language)})`);
+    const last = events[0];
+    return {
+      count,
+      last_title: last ? last.title : '',
+      last_message: last
+        ? last.message
+        : pick(all ? ACTION_TEXT.noEvent : ACTION_TEXT.none, language),
+      minutes_ago: last ? Math.max(0, Math.round((hub.now() - last.timestamp) / 60_000)) : -1,
+      names:
+        count > listed.length
+          ? `${listed.join(', ')}, +${count - listed.length}`
+          : listed.join(', '),
+    };
   },
 };

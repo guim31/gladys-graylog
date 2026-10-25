@@ -1,0 +1,445 @@
+{
+  "events": [
+    {
+      "event": {
+        "id": "01M5RT2TRHQTRW4VE1ZX518HEE",
+        "event_definition_type": "aggregation-v1",
+        "event_definition_id": "6add9906d5cba37b30f122a9",
+        "origin_context": "urn:graylog:message:es:graylog_0:b9b74de0-d038-11f1-9a5d-e6bece6a2ac7",
+        "timestamp": "2026-10-25T05:55:47.772Z",
+        "timestamp_processing": "2026-10-25T05:56:06.545Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000002"],
+        "source_streams": ["000000000000000000000001"],
+        "message": "Disk failure",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 3,
+        "scores": {},
+        "associated_assets": [],
+        "alert": true,
+        "fields": {},
+        "group_by_fields": {},
+        "replay_info": {
+          "timerange_start": "2026-10-25T05:55:06.397Z",
+          "timerange_end": "2026-10-25T05:56:06.397Z",
+          "query": "message:\\\"disk failure\\\"",
+          "streams": ["000000000000000000000001"],
+          "filters": []
+        }
+      },
+      "index_name": "gl-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RT2TRH0KA47RZ1KP7QSQYH",
+        "event_definition_type": "aggregation-v1",
+        "event_definition_id": "6add9906d5cba37b30f122a9",
+        "origin_context": "urn:graylog:message:es:graylog_0:b9ac7870-d038-11f1-9a5d-e6bece6a2ac7",
+        "timestamp": "2026-10-25T05:55:47.700Z",
+        "timestamp_processing": "2026-10-25T05:56:06.545Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000002"],
+        "source_streams": ["000000000000000000000001"],
+        "message": "Disk failure",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 3,
+        "scores": {},
+        "associated_assets": [],
+        "alert": true,
+        "fields": {},
+        "group_by_fields": {},
+        "replay_info": {
+          "timerange_start": "2026-10-25T05:55:06.397Z",
+          "timerange_end": "2026-10-25T05:56:06.397Z",
+          "query": "message:\\\"disk failure\\\"",
+          "streams": ["000000000000000000000001"],
+          "filters": []
+        }
+      },
+      "index_name": "gl-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RT261VRCRSDCCAZFXR1QGF",
+        "event_definition_type": "system-notifications-v1",
+        "event_definition_id": "6add98b2d5cba37b30f121dd",
+        "origin_context": null,
+        "timestamp": "2026-10-25T05:55:45.324Z",
+        "timestamp_processing": "2026-10-25T05:55:45.339Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000003"],
+        "source_streams": [],
+        "message": "OUTDATED_VERSION: You are running an outdated Graylog version",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 1,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {
+          "message_details": "\n\nThe most recent stable Graylog version is 7.2.1 (Noir) released at 2026-10-19T00:00:00.000Z.\nSee what&apos;s new in the changelogs:\n    https://docs.graylog.org/docs/changelog\n    https://docs.graylog.org/docs/changelog-graylog\n</span>\n",
+          "current_version": "7.2.1 (Noir) released at 2026-10-19T00:00:00.000Z"
+        },
+        "group_by_fields": {},
+        "replay_info": null
+      },
+      "index_name": "gl-system-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSXCEJ8CTJZ54V1E83FFG8",
+        "event_definition_type": "system-notifications-v1",
+        "event_definition_id": "6add98b2d5cba37b30f121dd",
+        "origin_context": null,
+        "timestamp": "2026-10-25T05:53:08.042Z",
+        "timestamp_processing": "2026-10-25T05:53:08.050Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000003"],
+        "source_streams": [],
+        "message": "GENERIC: URL not whitelisted.",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 1,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {
+          "message_details": "\nThe alert notification \"Disk failure\" is trying to access a URL which is not whitelisted. Please check your configuration. [url: \"http://localhost:9/hook\"]\n",
+          "description": "The alert notification \"Disk failure\" is trying to access a URL which is not whitelisted. Please check your configuration. [url: \"http://localhost:9/hook\"]",
+          "title": "URL not whitelisted."
+        },
+        "group_by_fields": {},
+        "replay_info": null
+      },
+      "index_name": "gl-system-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSXBQ6XPEAP5032373Z8CP",
+        "event_definition_type": "aggregation-v1",
+        "event_definition_id": "6add9906d5cba37b30f122b0",
+        "origin_context": "urn:graylog:message:es:graylog_0:3640d300-d038-11f1-9a5d-e6bece6a2ac7",
+        "timestamp": "2026-10-25T05:52:07.208Z",
+        "timestamp_processing": "2026-10-25T05:53:07.302Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000002"],
+        "source_streams": ["000000000000000000000001"],
+        "message": "SSH login",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 1,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {},
+        "group_by_fields": {},
+        "replay_info": {
+          "timerange_start": "2026-10-25T05:52:06.531Z",
+          "timerange_end": "2026-10-25T05:53:06.531Z",
+          "query": "message:sshd",
+          "streams": ["000000000000000000000001"],
+          "filters": []
+        }
+      },
+      "index_name": "gl-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSXBQ6RWKV326HJGTYZAAV",
+        "event_definition_type": "aggregation-v1",
+        "event_definition_id": "6add9906d5cba37b30f122a9",
+        "origin_context": "urn:graylog:message:es:graylog_0:36336580-d038-11f1-9a5d-e6bece6a2ac7",
+        "timestamp": "2026-10-25T05:52:07.126Z",
+        "timestamp_processing": "2026-10-25T05:53:07.302Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000002"],
+        "source_streams": ["000000000000000000000001"],
+        "message": "Disk failure",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 3,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {},
+        "group_by_fields": {},
+        "replay_info": {
+          "timerange_start": "2026-10-25T05:52:06.397Z",
+          "timerange_end": "2026-10-25T05:53:06.397Z",
+          "query": "message:\\\"disk failure\\\"",
+          "streams": ["000000000000000000000001"],
+          "filters": []
+        }
+      },
+      "index_name": "gl-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSXBQ6NGGGEYY2NE9T37TS",
+        "event_definition_type": "aggregation-v1",
+        "event_definition_id": "6add9906d5cba37b30f122b0",
+        "origin_context": "urn:graylog:message:es:graylog_0:36247160-d038-11f1-9a5d-e6bece6a2ac7",
+        "timestamp": "2026-10-25T05:52:07.027Z",
+        "timestamp_processing": "2026-10-25T05:53:07.302Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000002"],
+        "source_streams": ["000000000000000000000001"],
+        "message": "SSH login",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 1,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {},
+        "group_by_fields": {},
+        "replay_info": {
+          "timerange_start": "2026-10-25T05:52:06.531Z",
+          "timerange_end": "2026-10-25T05:53:06.531Z",
+          "query": "message:sshd",
+          "streams": ["000000000000000000000001"],
+          "filters": []
+        }
+      },
+      "index_name": "gl-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSXBQ6B042QXE6VXYCYH9S",
+        "event_definition_type": "aggregation-v1",
+        "event_definition_id": "6add9906d5cba37b30f122a9",
+        "origin_context": "urn:graylog:message:es:graylog_0:36127000-d038-11f1-9a5d-e6bece6a2ac7",
+        "timestamp": "2026-10-25T05:52:06.901Z",
+        "timestamp_processing": "2026-10-25T05:53:07.302Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000002"],
+        "source_streams": ["000000000000000000000001"],
+        "message": "Disk failure",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 3,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {},
+        "group_by_fields": {},
+        "replay_info": {
+          "timerange_start": "2026-10-25T05:52:06.397Z",
+          "timerange_end": "2026-10-25T05:53:06.397Z",
+          "query": "message:\\\"disk failure\\\"",
+          "streams": ["000000000000000000000001"],
+          "filters": []
+        }
+      },
+      "index_name": "gl-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSXBQ35PBRFDZTY0Z13TA6",
+        "event_definition_type": "aggregation-v1",
+        "event_definition_id": "6add9906d5cba37b30f122b0",
+        "origin_context": "urn:graylog:message:es:graylog_0:35ffab50-d038-11f1-9a5d-e6bece6a2ac7",
+        "timestamp": "2026-10-25T05:52:06.783Z",
+        "timestamp_processing": "2026-10-25T05:53:07.299Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000002"],
+        "source_streams": ["000000000000000000000001"],
+        "message": "SSH login",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 1,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {},
+        "group_by_fields": {},
+        "replay_info": {
+          "timerange_start": "2026-10-25T05:52:06.531Z",
+          "timerange_end": "2026-10-25T05:53:06.531Z",
+          "query": "message:sshd",
+          "streams": ["000000000000000000000001"],
+          "filters": []
+        }
+      },
+      "index_name": "gl-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSXBQ4GQHXWRZX6BSVRHYH",
+        "event_definition_type": "aggregation-v1",
+        "event_definition_id": "6add9906d5cba37b30f122a9",
+        "origin_context": "urn:graylog:message:es:graylog_0:35f8f490-d038-11f1-9a5d-e6bece6a2ac7",
+        "timestamp": "2026-10-25T05:52:06.685Z",
+        "timestamp_processing": "2026-10-25T05:53:07.300Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000002"],
+        "source_streams": ["000000000000000000000001"],
+        "message": "Disk failure",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 3,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {},
+        "group_by_fields": {},
+        "replay_info": {
+          "timerange_start": "2026-10-25T05:52:06.397Z",
+          "timerange_end": "2026-10-25T05:53:06.397Z",
+          "query": "message:\\\"disk failure\\\"",
+          "streams": ["000000000000000000000001"],
+          "filters": []
+        }
+      },
+      "index_name": "gl-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSV2WP9AVP66VRF170GB8V",
+        "event_definition_type": "system-notifications-v1",
+        "event_definition_id": "6add98b2d5cba37b30f121dd",
+        "origin_context": null,
+        "timestamp": "2026-10-25T05:51:52.689Z",
+        "timestamp_processing": "2026-10-25T05:51:52.726Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000003"],
+        "source_streams": [],
+        "message": "INPUT_FAILED_TO_START: An input has failed to start",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 1,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {
+          "reason": "bind(..) failed: Address already in use.",
+          "message_details": "\nInput [GELF TCP/Broken GELF TCP/6add98f8d5cba37b30f12291] has failed to start on node 00000000-0000-4000-8000-000000000001 for this reason:\n   »bind(..) failed: Address already in use.«.\nThis means that you are unable to receive any messages from this input.\nThis is mostly an indication of a misconfiguration or an error.\n",
+          "input_id": "[GELF TCP/Broken GELF TCP/6add98f8d5cba37b30f12291]"
+        },
+        "group_by_fields": {},
+        "replay_info": null
+      },
+      "index_name": "gl-system-events_0",
+      "index_type": "message"
+    },
+    {
+      "event": {
+        "id": "01M5RSS5Q90EKE6VK191CV3NZ4",
+        "event_definition_type": "system-notifications-v1",
+        "event_definition_id": "6add98b2d5cba37b30f121dd",
+        "origin_context": null,
+        "timestamp": "2026-10-25T05:50:50.014Z",
+        "timestamp_processing": "2026-10-25T05:50:50.089Z",
+        "timerange_start": null,
+        "timerange_end": null,
+        "streams": ["000000000000000000000003"],
+        "source_streams": [],
+        "message": "ES_NODE_DISK_WATERMARK_HIGH: Elasticsearch nodes disk usage above high watermark",
+        "source": "graylog",
+        "key_tuple": [],
+        "key": null,
+        "priority": 1,
+        "scores": {},
+        "associated_assets": [],
+        "alert": false,
+        "fields": {
+          "nodes": "192.0.2.3",
+          "message_details": "\n\nThere are Elasticsearch nodes in the cluster with almost no free disk, their disk usage is above the high watermark.\nFor this reason Elasticsearch will attempt to relocate shards away from the affected nodes.\nThe affected nodes are: [192.0.2.3]\nCheck for more details:\"https://www.elastic.co/guide/en/elasticsearch/reference/master/disk-allocator.html\n"
+        },
+        "group_by_fields": {},
+        "replay_info": null
+      },
+      "index_name": "gl-system-events_0",
+      "index_type": "message"
+    }
+  ],
+  "used_indices": ["gl-events_0", "gl-system-events_0"],
+  "parameters": {
+    "page": 1,
+    "per_page": 200,
+    "timerange": {
+      "range": 86400,
+      "type": "relative"
+    },
+    "query": "",
+    "filter": {
+      "alerts": "include",
+      "event_definitions": []
+    },
+    "sort_by": "timestamp",
+    "sort_direction": "desc",
+    "sort_unmapped_type": null
+  },
+  "total_events": 12,
+  "duration": 18,
+  "context": {
+    "event_definitions": {
+      "6add98b2d5cba37b30f121dd": {
+        "id": "6add98b2d5cba37b30f121dd",
+        "title": "System notification events",
+        "description": "Reserved event definition for system notification events",
+        "remediation_steps": null
+      },
+      "6add9906d5cba37b30f122b0": {
+        "id": "6add9906d5cba37b30f122b0",
+        "title": "SSH login",
+        "description": "",
+        "remediation_steps": null
+      },
+      "6add9906d5cba37b30f122a9": {
+        "id": "6add9906d5cba37b30f122a9",
+        "title": "Disk failure",
+        "description": "",
+        "remediation_steps": null
+      }
+    },
+    "streams": {
+      "000000000000000000000003": {
+        "id": "000000000000000000000003",
+        "title": "All system events",
+        "description": "Stream containing all system events created by Graylog",
+        "remediation_steps": null
+      },
+      "000000000000000000000002": {
+        "id": "000000000000000000000002",
+        "title": "All events",
+        "description": "Stream containing all events created by Graylog",
+        "remediation_steps": null
+      }
+    }
+  }
+}

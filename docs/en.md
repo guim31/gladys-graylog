@@ -1,61 +1,194 @@
-# Demo Devices Template
+# Graylog
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+Bring your [Graylog](https://graylog.org/) log server into Gladys: each event
+definition becomes a device (its events of the last 24 hours, the date of the
+last one), a "Graylog" device watches the server itself (messages per second,
+failed inputs, storage in red, journal backlog, events and alerts of the day),
+and your scenes react when an alert fires — a red light when "Disk failure"
+fires, a message when an input stops receiving logs or when OpenSearch turns
+red. A scene action reads the latest alerts for a message, and a dashboard
+widget shows them.
 
-## What you get
+The integration reads the REST API of Graylog (port 9000) on your local
+network, with an access token. It only reads: nothing is changed in Graylog.
+Nothing goes through a cloud.
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+Tested against a real Graylog 6.1 (official `graylog/graylog:6.1` Docker
+image, MongoDB 6, OpenSearch 2.15): GELF and Syslog inputs, an input that fails
+to start, two event definitions fed by GELF messages, one of them with a
+notification (an alert), a Reader user with shared streams. Graylog 5 has the
+same API but was not tested. Feedback welcome:
+[github.com/guim31/gladys-graylog/issues](https://github.com/guim31/gladys-graylog/issues).
 
-## Configuration
+## What you need
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+- Gladys Assistant 5.1.0 or later.
+- Graylog 6 (Open, Enterprise or Security), reachable from the Gladys machine,
+  on port 9000 or behind a reverse proxy.
+- A Graylog user for Gladys and its access token. Avoid the `admin` account:
+  the integration only needs to read.
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+## Getting started
 
-## Actions
+### 1. Create a user for Gladys
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+In Graylog:
 
-## Scenes
+1. **System → Users and Teams → Create user**: a user `gladys` with the
+   **Reader** role.
+2. Share with it, as **Viewer** (the **Share** button of each entity):
+   - each event definition to follow (**Alerts → Event Definitions**);
+   - the **All events** stream, where the events are stored;
+   - the streams these definitions search (often **Default Stream**): Graylog
+     only shows an event to a user who can read the messages behind it.
+3. On the `gladys` user: **Edit tokens**, create a token named `gladys`, and
+   copy it (it is shown once).
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+The input states, the throughput and the storage health need no share.
+Tested on Graylog 6.1: with the Reader role alone, the definitions are not
+listed and only the system notifications are visible.
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+### 2. Configure the integration
+
+In Gladys, **Integrations → Graylog → Configuration**:
+
+- **Address**: the address of the Graylog web interface, e.g.
+  `192.168.1.2` (http:// and port 9000 are added), `graylog.lan:9000`, or
+  `https://logs.example.org` behind a reverse proxy. An address copied from
+  the browser works too.
+- **Access token**: the token of step 1. Without token, fill **User (without
+  token)** and **Password (without token)** instead.
+- **Refresh interval**: how often Graylog is read (1 minute by default; five
+  or six API requests each time).
+- **Accept self-signed certificates**: only for an `https://` address whose
+  certificate your system does not trust.
+- **Language of the names**: language of the feature names (set when a device
+  is added), of the dates and of the scene results.
+
+Save, then **Test the connection**: the answer gives the Graylog version, the
+messages per second, the failed inputs, the number of event definitions and
+the alerts of the last 24 hours.
+
+### 3. Add the devices
+
+In the **Discover** tab, add the "Graylog" device and the event definitions to
+follow. Nothing is created on your behalf. The scene triggers, the scene
+action and the widget work for every definition, added or not.
+
+## The devices
+
+**Graylog** (the server, or the whole cluster):
+
+| Feature                         | Meaning                                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Messages per second             | Messages received per second, all nodes together (the "In" of the Graylog header).                                        |
+| Failed inputs                   | Inputs FAILED, FAILING or badly configured, on any node. An input stopped on purpose does not count.                      |
+| Storage in red                  | 1 when the OpenSearch / Elasticsearch cluster is red (messages are no longer stored). Yellow, usual on one node, gives 0. |
+| Messages waiting in the journal | Messages written to the disk journal and not processed yet: a growing number means Graylog cannot keep up.                |
+| Events (24 h)                   | Events of the last 24 hours, every definition.                                                                            |
+| Alerts (24 h)                   | The alerts among them (events of a definition with notifications).                                                        |
+
+**One device per event definition**:
+
+| Feature       | Meaning                                                                      |
+| ------------- | ---------------------------------------------------------------------------- |
+| Events (24 h) | Its events of the last 24 hours.                                             |
+| Last event    | Date and time of its last event, in the time zone of Gladys (last 24 hours). |
+
+A device of a definition is named after its title in Graylog. The "System
+notification events" definition (Graylog's own notifications: an input that
+fails to start, a full disk, an outdated version…) is proposed too.
 
 ## Dashboard
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+The **Graylog alerts** widget shows, at a glance:
+
+- three figures: the alerts of the last 24 hours, the failed inputs and the
+  messages per second;
+- the problems of Graylog itself: each failed input, the storage when it is
+  yellow or red;
+- the latest alerts, the newest first, with their time.
+
+In its settings, choose the event definitions to show (empty: all) and
+**Rows**: **Alerts only** (default) or **Alerts and events**. The
+**Refresh** button reads Graylog again. The widget works before any device is
+added.
+
+## Scenes
+
+### Triggers
+
+- **A Graylog event fires**: a new event of a definition. Filters: the
+  definitions (empty: any), the kind (**Alert**: a definition with
+  notifications, **Event**: one without) and the priority. Variables: the
+  definition, the message, the kind, the priority, the source, the event key.
+- **An input fails**: an input becomes FAILED, FAILING or badly configured;
+  its messages are lost. Variables: the input, its type, its state, the
+  error.
+- **An input runs again**: an input announced failed is RUNNING again.
+  Variables: the input, its type, the duration in minutes.
+- **The storage turns red**: the OpenSearch / Elasticsearch cluster of
+  Graylog is red.
+- **The storage is no longer red**: back to yellow or green. Variables: the
+  health, the duration in minutes.
+- **Graylog no longer answers**: the API failed to answer twice in a row
+  (about 15 seconds apart). A refused token does not fire it: the
+  integration status says so.
+
+Each event is announced once, even across a restart of Gladys or of the
+integration (the ids already announced are kept in `/data`). The events
+already there when the integration starts are not announced.
+
+### Action
+
+**Read the latest alerts** counts and lists the alerts of the last 24 hours,
+of one definition or of all; set **What** to **Alerts and events** to include
+the events without notification. Outputs: the number, the definition and the
+message of the last one, how many minutes ago (-1 when none), and a list
+("Disk failure (14:32), …", ten at most).
+
+### Scene ideas
+
+- **A Graylog event fires** (definition "Disk failure", kind Alert) → turn
+  the office light red and send a message "Graylog: {{message}}".
+- **An input fails** → send a message: "Graylog no longer receives
+  {{input}}: {{message}}". Then **An input runs again** → "{{input}} is back
+  after {{duration_minutes}} min".
+- Every morning at 8:00 → **Read the latest alerts** → send "{{count}}
+  alert(s) overnight: {{names}}".
+- **The storage turns red** → notify everyone: logs are being lost.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **"access token, user or password refused"**: the token was revoked or
+  mistyped. Create a new one (**Edit tokens**).
+- **"no Graylog API at this address"**: check the port (9000 by default), and
+  the path of a reverse proxy (`https://example.org/graylog`).
+- **"Graylog does not answer"**: the Gladys machine cannot reach Graylog
+  (firewall, Graylog stopped, a Docker network). Try `curl
+http://<address>:9000/api/system/lbstatus` from the Gladys machine.
+- **"certificate refused"**: tick **Accept self-signed certificates**, or use
+  a trusted certificate.
+- **No event definition in the Discover tab, or 0 events while Graylog shows
+  some**: the user does not see them. Share the definitions, the **All
+  events** stream and the streams the definitions search with it (step 1).
+- **"permission missing"**: the user lacks a permission on the system pages;
+  the Reader role covers them.
+- To see what the integration does, set `LOG_LEVEL=debug` on its container.
+
+## Limits
+
+- Read only: the integration neither changes Graylog nor acknowledges events
+  (Graylog Open has no acknowledgement).
+- An event is seen at the next read (1 minute by default), and Graylog itself
+  runs a definition every minute or more: count up to a few minutes between a
+  log line and the scene.
+- The latest 200 events of the last 24 hours are read at each cycle: the
+  counters stay exact beyond (Graylog counts them), but a burst of more than
+  200 events between two reads announces only the latest 200. At most 30
+  scene events are sent per read; the rest follows at the next reads.
+- The event message is the one Graylog writes: for an aggregation (the usual
+  "Filter & Aggregation" definition), its title.
+- The input states and the storage health need Graylog's own API: a user
+  without the Reader role sees nothing there.
+- Graylog 5 is expected to work (same API) but was not tested.
