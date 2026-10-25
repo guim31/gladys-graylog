@@ -51,20 +51,21 @@ export const SCENE_ACTIONS = {
     }
     const all = fields.include === SCOPES.ALL;
     const events = hub.recentEvents({ scope, all });
+    const count = hub.countEvents({ scope, all, listed: events.length });
     const listed = events
       .slice(0, MAX_LISTED)
       .map((event) => `${event.title || event.definitionId} (${clock(event.timestamp, language)})`);
     const last = events[0];
     return {
-      count: events.length,
+      count,
       last_title: last ? last.title : '',
       last_message: last
         ? last.message
         : pick(all ? ACTION_TEXT.noEvent : ACTION_TEXT.none, language),
       minutes_ago: last ? Math.max(0, Math.round((hub.now() - last.timestamp) / 60_000)) : -1,
       names:
-        events.length > listed.length
-          ? `${listed.join(', ')}, +${events.length - listed.length}`
+        count > listed.length
+          ? `${listed.join(', ')}, +${count - listed.length}`
           : listed.join(', '),
     };
   },

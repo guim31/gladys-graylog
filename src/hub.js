@@ -374,13 +374,19 @@ export class GraylogHub {
    * marked announced only once Gladys accepted its event (Gladys restarting,
    * a burst beyond the cap: sent at a next read), and an end is announced
    * only if its start was. What is already there at the first read (or after
-   * a change of server or user) is recorded, not announced.
+   * a change of server or user) is recorded, not announced, nor its end.
    */
   async transitions() {
     const { generation } = this;
-    const { seen, inputs: knownInputs, primed } = this.saved;
+    // Kept for the whole method: a new configuration replaces this.saved
+    // while Gladys takes an event, and must not be touched by this read.
+    const saved = this.saved;
+    const { seen, inputs: knownInputs, primed } = saved;
     const now = this.now();
     const language = this.config.language;
+    // Graylog itself first: a burst of events must not hold back a failed
+    // input or a red storage beyond the cap.
+    const system = [];
     const events = [];
 
     // New events, the oldest first. Tracked by id, not by date: an
@@ -397,59 +403,69 @@ export class GraylogHub {
       }
     }
 
-    // Inputs failing, and running again.
-    const byKey = new Map(this.data.inputs.all.map((input) => [input.key, input]));
-    for (const input of this.data.inputs.failed) {
+    // Inputs failing, and running again. A failure already there at the first
+    // read is recorded, not announced, and neither is its end.
+    const { all, failed, nodes } = this.data.inputs;
+    const byKey = new Map(all.map((input) => [input.key, input]));
+    for (const input of failed) {
       let entry = knownInputs[input.key];
       if (!entry) {
-        entry = { since: now, announced: !primed };
+        entry = { since: now, announced: false, silent: !primed };
         knownInputs[input.key] = entry;
       }
       Object.assign(entry, { title: input.title, type: input.type, state: input.state });
       entry.message = input.message;
-      if (!entry.announced) {
-        events.push({ key: TRIGGERS.INPUT_FAILED, input, entry });
+      if (!entry.announced && !entry.silent) {
+        system.push({ key: TRIGGERS.INPUT_FAILED, input, entry });
       }
     }
     for (const [key, entry] of Object.entries(knownInputs)) {
       const input = byKey.get(key);
-      if (input && this.data.inputs.failed.includes(input)) {
+      if (input && failed.includes(input)) {
         continue;
       }
-      if (input?.state === 'RUNNING' && entry.announced) {
-        events.push({ key: TRIGGERS.INPUT_RECOVERED, input, entry, inputKey: key });
-      } else if (!input || input.state === 'RUNNING' || input.state === 'STOPPED') {
-        // Deleted, stopped on purpose, or never announced: no recovery to tell.
+      if (!input) {
+        // Deleted, unless its node did not answer this time (restarting,
+        // states not readable): keep it, so it is not announced twice.
+        const node = key.slice(0, key.indexOf(':'));
+        if (nodes && nodes.includes(node)) {
+          delete knownInputs[key];
+        }
+      } else if (input.state === 'RUNNING' && entry.announced) {
+        system.push({ key: TRIGGERS.INPUT_RECOVERED, input, entry, inputKey: key });
+      } else if (input.state === 'RUNNING' || input.state === 'STOPPED') {
+        // Stopped on purpose, or never announced: no recovery to tell.
         delete knownInputs[key];
       }
       // Otherwise STARTING…: wait for the outcome.
     }
 
-    // The storage turning red, and back.
+    // The storage turning red, and back (same rule at the first read).
     const storage = this.data.storage;
     if (storage === 'red') {
-      this.saved.storage ??= { since: now, announced: !primed };
-      if (!this.saved.storage.announced) {
-        events.push({ key: TRIGGERS.STORAGE_RED });
+      saved.storage ??= { since: now, announced: false, silent: !primed };
+      if (!saved.storage.announced && !saved.storage.silent) {
+        system.push({ key: TRIGGERS.STORAGE_RED });
       }
-    } else if (storage !== null && this.saved.storage) {
-      if (this.saved.storage.announced) {
-        events.push({ key: TRIGGERS.STORAGE_RECOVERED, status: storage });
+    } else if (storage !== null && saved.storage) {
+      if (saved.storage.announced) {
+        system.push({ key: TRIGGERS.STORAGE_RECOVERED, status: storage });
       } else {
-        this.saved.storage = null;
+        saved.storage = null;
       }
     }
-    this.saved.primed = true;
+    saved.primed = true;
 
-    const sent = events.slice(0, MAX_EVENTS_PER_READ);
-    if (events.length > sent.length) {
-      logger.warn(`${events.length - sent.length} change(s) left for the next read`);
+    const queue = [...system, ...events];
+    const sent = queue.slice(0, MAX_EVENTS_PER_READ);
+    if (queue.length > sent.length) {
+      logger.warn(`${queue.length - sent.length} change(s) left for the next read`);
     }
     for (const item of sent) {
       if (generation !== this.generation) {
         break; // reconfigured meanwhile: these events belong to the old scope
       }
-      const data = this.eventData(item, now, language);
+      const data = this.eventData(item, now, language, saved);
       logger.debug(`${item.key}: ${JSON.stringify(data).slice(0, 200)}`);
       if (!(await this.fireEvent(item.key, data))) {
         break; // Gladys refuses: keep the order, try again at the next read
@@ -461,16 +477,18 @@ export class GraylogHub {
       } else if (item.key === TRIGGERS.INPUT_RECOVERED) {
         delete knownInputs[item.inputKey];
       } else if (item.key === TRIGGERS.STORAGE_RED) {
-        this.saved.storage.announced = true;
+        saved.storage.announced = true;
       } else {
-        this.saved.storage = null;
+        saved.storage = null;
       }
     }
     pruneSeen(seen, now);
-    this.store.save(this.saved);
+    if (saved === this.saved) {
+      this.store.save(saved);
+    }
   }
 
-  eventData(item, now, language) {
+  eventData(item, now, language, saved) {
     if (item.key === TRIGGERS.EVENT) {
       const { event } = item;
       return {
@@ -505,7 +523,7 @@ export class GraylogHub {
     return {
       address: this.instanceName(),
       status: item.status,
-      duration_minutes: minutesSince(this.saved.storage?.since, now),
+      duration_minutes: minutesSince(saved.storage?.since, now),
     };
   }
 
@@ -729,6 +747,27 @@ export class GraylogHub {
     return (this.data?.events.list ?? [])
       .filter((event) => (!scope || scope.has(event.definitionId)) && (all || event.alert))
       .sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  /**
+   * How many alerts (or events, `all`) in the last 24 hours: Graylog's own
+   * totals when it has them, else the events read (`listed`, the newest 200:
+   * a minimum when a single definition has more alerts than that).
+   */
+  countEvents({ scope = null, all = false, listed }) {
+    if (!this.data) {
+      return listed;
+    }
+    if (!scope) {
+      return all ? this.data.events.total : this.data.events.alerts;
+    }
+    if (all) {
+      const counts = [...scope].map((id) => this.data.events.byDefinition.get(id)?.count);
+      if (counts.every((count) => typeof count === 'number')) {
+        return counts.reduce((sum, count) => sum + count, 0);
+      }
+    }
+    return listed;
   }
 
   /** "Test the connection": read now, one line. */

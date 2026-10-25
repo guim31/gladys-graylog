@@ -220,7 +220,7 @@ test('a burst of events is capped per read, the rest follows', async (t) => {
 test('an input failing, then running again; one stopped on purpose is quiet', async (t) => {
   const w = await world(t);
   // "Broken GELF TCP" already failed at the first read: recorded, not
-  // announced; its recovery is (it was a problem all along).
+  // announced, and neither is its recovery.
   w.graylog.setInput('Syslog UDP', 'FAILED', 'bind(..) failed: Address already in use.');
   await w.hub.pollAll();
   await w.hub.pollAll();
@@ -240,10 +240,6 @@ test('an input failing, then running again; one stopped on purpose is quiet', as
     },
     {
       key: TRIGGERS.INPUT_RECOVERED,
-      data: { input: 'Broken GELF TCP', input_type: 'GELF TCP', duration_minutes: 5 },
-    },
-    {
-      key: TRIGGERS.INPUT_RECOVERED,
       data: { input: 'Syslog UDP', input_type: 'Syslog UDP', duration_minutes: 5 },
     },
   ]);
@@ -254,7 +250,7 @@ test('an input failing, then running again; one stopped on purpose is quiet', as
   await w.hub.pollAll();
   w.graylog.setInput('GELF HTTP', 'RUNNING');
   await w.hub.pollAll();
-  assert.deepEqual(keysOf(w).slice(3), [TRIGGERS.INPUT_FAILED], 'no recovery for a stop');
+  assert.deepEqual(keysOf(w).slice(2), [TRIGGERS.INPUT_FAILED], 'no recovery for a stop');
 });
 
 test('the storage turning red, then yellow', async (t) => {
@@ -389,4 +385,66 @@ test('no secret in the logs, even when Graylog refuses', async (t) => {
   await w.hub.pollAll();
   assert.ok(lines.length > 0);
   assert.ok(lines.every((line) => !line.includes(BASE_CONFIG.api_token)));
+});
+
+test('a storage already red at the first read: neither announced nor its end', async (t) => {
+  const graylog = new FakeGraylog();
+  graylog.setStorage('red');
+  const w = await world(t, { graylog });
+  graylog.setStorage('green');
+  await w.hub.pollAll();
+  assert.deepEqual(w.fake.sceneEvents, []);
+});
+
+test('an input missing because its node did not answer is not announced twice', async (t) => {
+  const w = await world(t);
+  w.graylog.setInput('Syslog UDP', 'FAILED', 'boom');
+  await w.hub.pollAll();
+  const states = w.graylog.inputStates;
+  w.graylog.inputStates = {}; // the node restarting: absent for one read
+  await w.hub.pollAll();
+  w.graylog.forbidden.add('/cluster/inputstates'); // then not readable
+  await w.hub.pollAll();
+  w.graylog.forbidden.clear();
+  w.graylog.inputStates = states;
+  await w.hub.pollAll();
+  assert.deepEqual(keysOf(w), [TRIGGERS.INPUT_FAILED]);
+});
+
+test('Graylog problems go before a burst of events beyond the cap', async (t) => {
+  const w = await world(t);
+  for (let i = 0; i < MAX_EVENTS_PER_READ + 5; i += 1) {
+    newEvent(w, { time: w.clock.now() + i });
+  }
+  w.graylog.setStorage('red');
+  await w.hub.pollAll();
+  assert.equal(keysOf(w)[0], TRIGGERS.STORAGE_RED);
+});
+
+test('a new configuration while Gladys takes an event leaves the new state alone', async (t) => {
+  const w = await world(t);
+  w.graylog.setStorage('red');
+  let release;
+  const original = w.gladys.publishSceneEvent.bind(w.gladys);
+  t.mock.method(w.gladys, 'publishSceneEvent', async (...args) => {
+    await new Promise((resolve) => {
+      release = resolve;
+    });
+    return original(...args);
+  });
+  const reading = w.hub.pollAll();
+  while (!release) {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  const reconfiguring = w.fake.configUpdated({
+    graylog_url: BASE_CONFIG.graylog_url,
+    username: 'admin',
+    password: 'secret-password',
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  release();
+  await reading;
+  await reconfiguring;
+  assert.equal(w.hub.error, null);
+  assert.equal(w.hub.saved.storage.announced, false, 'the new scope starts silent');
 });

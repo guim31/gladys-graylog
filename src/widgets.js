@@ -121,7 +121,7 @@ async function get(hub, { settings, language = 'en' }) {
   const events = hub.recentEvents({ scope, all });
   const { data } = hub;
   const failed = data.inputs.failed;
-  const count = scope ? events.length : all ? data.events.total : data.events.alerts;
+  const count = hub.countEvents({ scope, all, listed: events.length });
 
   const components = [
     {

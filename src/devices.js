@@ -211,7 +211,7 @@ export function serverValues(gladys, data) {
 
 /**
  * Feature values of an event definition.
- * @param {{ count: number, last: number|null }} stats its events of the last 24 hours
+ * @param {{ count: number|null, last: number|null }} stats (null: unknown) its events of the last 24 hours
  * @param {(timestamp: number) => string} formatTime
  */
 export function definitionValues(gladys, id, stats, formatTime) {

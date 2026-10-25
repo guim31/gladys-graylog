@@ -271,6 +271,8 @@ export class GraylogClient {
     return {
       total: all.length,
       all,
+      // The nodes that answered: null when the states could not be read.
+      nodes: answer ? Object.keys(answer) : null,
       failed: all.filter((input) => FAILED_INPUT_STATES.has(input.state)),
     };
   }
@@ -366,6 +368,10 @@ export class GraylogClient {
       }
     }
     if (!complete) {
+      // Beyond the cap the count stays unknown (null: the last value stands).
+      for (const stats of byDefinition.values()) {
+        stats.count = null;
+      }
       for (const definition of definitions.slice(0, MAX_COUNTED_DEFINITIONS)) {
         const one = await this.search({ perPage: 1, definitions: [definition.id] });
         byDefinition.set(definition.id, {
