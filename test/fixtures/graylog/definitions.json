@@ -1,0 +1,166 @@
+{
+  "total": 3,
+  "page": 1,
+  "per_page": 500,
+  "count": 3,
+  "event_definitions": [
+    {
+      "_scope": "DEFAULT",
+      "id": "6add9906d5cba37b30f122a9",
+      "title": "Disk failure",
+      "description": "",
+      "updated_at": "2026-10-25T05:55:47.618Z",
+      "matched_at": "2026-10-25T05:55:47.772Z",
+      "priority": 3,
+      "alert": true,
+      "config": {
+        "type": "aggregation-v1",
+        "query": "message:\\\"disk failure\\\"",
+        "query_parameters": [],
+        "filters": [],
+        "streams": [],
+        "stream_categories": [],
+        "group_by": [],
+        "series": [],
+        "conditions": {
+          "expression": null
+        },
+        "search_within_ms": 60000,
+        "execute_every_ms": 60000,
+        "use_cron_scheduling": false,
+        "cron_expression": null,
+        "cron_timezone": null,
+        "event_limit": 100
+      },
+      "field_spec": {},
+      "key_spec": [],
+      "notification_settings": {
+        "grace_period_ms": 0,
+        "backlog_size": 0
+      },
+      "notifications": [
+        {
+          "notification_id": "6add98f8d5cba37b30f12298",
+          "notification_parameters": null
+        }
+      ],
+      "storage": [
+        {
+          "type": "persist-to-streams-v1",
+          "streams": ["000000000000000000000002"]
+        }
+      ],
+      "scheduler": null,
+      "state": "ENABLED"
+    },
+    {
+      "_scope": "DEFAULT",
+      "id": "6add9906d5cba37b30f122b0",
+      "title": "SSH login",
+      "description": "",
+      "updated_at": "2026-10-25T05:52:57.073Z",
+      "matched_at": "2026-10-25T05:52:07.208Z",
+      "priority": 1,
+      "alert": false,
+      "config": {
+        "type": "aggregation-v1",
+        "query": "message:sshd",
+        "query_parameters": [],
+        "filters": [],
+        "streams": [],
+        "stream_categories": [],
+        "group_by": [],
+        "series": [],
+        "conditions": {
+          "expression": null
+        },
+        "search_within_ms": 60000,
+        "execute_every_ms": 60000,
+        "use_cron_scheduling": false,
+        "cron_expression": null,
+        "cron_timezone": null,
+        "event_limit": 100
+      },
+      "field_spec": {},
+      "key_spec": [],
+      "notification_settings": {
+        "grace_period_ms": 0,
+        "backlog_size": 0
+      },
+      "notifications": [],
+      "storage": [
+        {
+          "type": "persist-to-streams-v1",
+          "streams": ["000000000000000000000002"]
+        }
+      ],
+      "scheduler": null,
+      "state": "ENABLED"
+    },
+    {
+      "_scope": "SYSTEM_NOTIFICATION_EVENT",
+      "id": "6add98b2d5cba37b30f121dd",
+      "title": "System notification events",
+      "description": "Reserved event definition for system notification events",
+      "updated_at": "2026-10-25T05:50:42.686Z",
+      "matched_at": "2026-10-25T05:55:45.324Z",
+      "priority": 1,
+      "alert": false,
+      "config": {
+        "type": "system-notifications-v1"
+      },
+      "field_spec": {},
+      "key_spec": [],
+      "notification_settings": {
+        "grace_period_ms": 0,
+        "backlog_size": 0
+      },
+      "notifications": [],
+      "storage": [
+        {
+          "type": "persist-to-streams-v1",
+          "streams": ["000000000000000000000003"]
+        }
+      ],
+      "scheduler": null,
+      "state": "ENABLED"
+    }
+  ],
+  "query": "",
+  "context": {
+    "scheduler": {
+      "6add9906d5cba37b30f122a9": {
+        "status": "runnable",
+        "next_time": "2026-10-25T05:57:06.397Z",
+        "triggered_at": "2026-10-25T05:56:06.490Z",
+        "queued_notifications": 5,
+        "data": {
+          "type": "event-processor-execution-v1",
+          "timerange_from": "2026-10-25T05:56:06.397Z",
+          "timerange_to": "2026-10-25T05:57:06.397Z"
+        },
+        "is_scheduled": true
+      },
+      "6add9906d5cba37b30f122b0": {
+        "status": "runnable",
+        "next_time": "2026-10-25T05:57:06.531Z",
+        "triggered_at": "2026-10-25T05:56:06.591Z",
+        "queued_notifications": 0,
+        "data": {
+          "type": "event-processor-execution-v1",
+          "timerange_from": "2026-10-25T05:56:06.531Z",
+          "timerange_to": "2026-10-25T05:57:06.531Z"
+        },
+        "is_scheduled": true
+      },
+      "6add98b2d5cba37b30f121dd": {
+        "status": null,
+        "next_time": null,
+        "triggered_at": null,
+        "queued_notifications": 0,
+        "data": null,
+        "is_scheduled": false
+      }
+    }
+  }
+}

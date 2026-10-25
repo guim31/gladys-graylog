@@ -1,177 +1,865 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Graylog",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Your Graylog in Gladys: alerts and events in scenes, failed inputs, storage health and a widget.",
+    "fr": "Votre Graylog dans Gladys : alertes et événements en scène, entrées en échec, stockage et widget.",
+    "de": "Dein Graylog in Gladys: Alarme und Ereignisse in Szenen, fehlerhafte Inputs, Speicher, Widget.",
+    "es": "Su Graylog en Gladys: alertas y eventos en escenas, entradas con fallo, almacenamiento y widget."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-graylog:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-graylog/main/cover.png",
+  "categories": ["network"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Graylog",
+        "fr": "Votre Graylog",
+        "de": "Dein Graylog",
+        "es": "Su Graylog"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "In Graylog, create a Reader user for Gladys and an access token for it. Share with it (Viewer) the event definitions, the All events stream and the streams they search. Then add the definitions to follow from the Discover tab.",
+        "fr": "Dans Graylog, créez un utilisateur Reader pour Gladys et son jeton d'accès. Partagez-lui (Viewer) les définitions d'événement, le flux All events et les flux qu'elles fouillent. Ajoutez ensuite les définitions depuis l'onglet Découverte.",
+        "de": "Lege in Graylog einen Reader-Benutzer für Gladys und sein Zugriffstoken an. Teile mit ihm (Viewer) die Ereignisdefinitionen, den Stream All events und die durchsuchten Streams. Lege die Definitionen dann im Tab „Entdecken“ an.",
+        "es": "En Graylog, cree un usuario Reader para Gladys y su token de acceso. Comparta con él (Viewer) las definiciones de evento, el stream All events y los streams que consultan. Después añada las definiciones desde la pestaña Descubrir."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-graylog/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Installationsanleitung",
+            "es": "Guía de instalación"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "graylog_url",
+      "type": "string",
+      "label": {
+        "en": "Address",
+        "fr": "Adresse",
+        "de": "Adresse",
+        "es": "Dirección"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "The address of the Graylog web interface; http:// and port 9000 unless you type others.",
+        "fr": "L'adresse de l'interface web de Graylog ; http:// et port 9000 sauf si vous en saisissez d'autres.",
+        "de": "Die Adresse der Graylog-Weboberfläche; http:// und Port 9000, außer du gibst andere ein.",
+        "es": "La dirección de la interfaz web de Graylog; http:// y puerto 9000 salvo que introduzca otros."
+      },
+      "placeholder": {
+        "en": "e.g. 192.168.1.2",
+        "fr": "ex. 192.168.1.2",
+        "de": "z. B. 192.168.1.2",
+        "es": "p. ej. 192.168.1.2"
+      },
+      "required": true
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "api_token",
+      "type": "secret",
+      "label": {
+        "en": "Access token",
+        "fr": "Jeton d'accès",
+        "de": "Zugriffstoken",
+        "es": "Token de acceso"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "Recommended. Users → the Gladys user → Edit tokens. Leave empty to use a user and password instead.",
+        "fr": "Conseillé. Utilisateurs → l'utilisateur Gladys → Edit tokens. Vide : utilisateur et mot de passe ci-dessous.",
+        "de": "Empfohlen. Users → der Gladys-Benutzer → Edit tokens. Leer: Benutzer und Passwort unten.",
+        "es": "Recomendado. Users → el usuario Gladys → Edit tokens. Vacío: usuario y contraseña de abajo."
+      },
+      "required": false
     },
     {
-      "key": "unit",
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "User (without token)",
+        "fr": "Utilisateur (sans jeton)",
+        "de": "Benutzer (ohne Token)",
+        "es": "Usuario (sin token)"
+      },
+      "placeholder": {
+        "en": "e.g. gladys",
+        "fr": "ex. gladys",
+        "de": "z. B. gladys",
+        "es": "p. ej. gladys"
+      },
+      "required": false
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password (without token)",
+        "fr": "Mot de passe (sans jeton)",
+        "de": "Passwort (ohne Token)",
+        "es": "Contraseña (sin token)"
+      },
+      "description": {
+        "en": "Never the admin account: the Reader user above.",
+        "fr": "Jamais le compte admin : l'utilisateur Reader ci-dessus.",
+        "de": "Nie das Admin-Konto: der Reader-Benutzer oben.",
+        "es": "Nunca la cuenta admin: el usuario Reader de arriba."
+      },
+      "required": false
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "poll_interval",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often Graylog is read: five or six API requests each time.",
+        "fr": "Fréquence de lecture de Graylog : cinq ou six requêtes d'API à chaque fois.",
+        "de": "Wie oft Graylog gelesen wird: jedes Mal fünf oder sechs API-Anfragen.",
+        "es": "Con qué frecuencia se lee Graylog: cinco o seis peticiones de API cada vez."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "60",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "30",
+          "label": {
+            "en": "30 seconds",
+            "fr": "30 secondes",
+            "de": "30 Sekunden",
+            "es": "30 segundos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "allow_self_signed",
+      "type": "boolean",
+      "label": {
+        "en": "Accept self-signed certificates",
+        "fr": "Accepter les certificats auto-signés",
+        "de": "Selbstsignierte Zertifikate akzeptieren",
+        "es": "Aceptar certificados autofirmados"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Only for an https:// address whose certificate is not trusted (your own CA, a self-signed one).",
+        "fr": "Seulement pour une adresse https:// dont le certificat n'est pas reconnu (votre propre autorité, auto-signé).",
+        "de": "Nur für eine https://-Adresse, deren Zertifikat nicht vertrauenswürdig ist (eigene CA, selbstsigniert).",
+        "es": "Solo para una dirección https:// cuyo certificado no es de confianza (su propia CA, autofirmado)."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": false
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
+      },
+      "description": {
+        "en": "Language of the feature names (set when a device is added), of the dates and of the scene results.",
+        "fr": "Langue des noms des fonctionnalités (fixés à l'ajout d'un appareil), des dates et des résultats de scène.",
+        "de": "Sprache der Funktionsnamen (beim Hinzufügen eines Geräts festgelegt), der Daten und der Szenen-Ergebnisse.",
+        "es": "Idioma de los nombres de las funciones (fijados al añadir un dispositivo), de las fechas y de los resultados de escena."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "event_triggered",
+      "label": {
+        "en": "A Graylog event fires",
+        "fr": "Un événement Graylog se déclenche",
+        "de": "Ein Graylog-Ereignis tritt ein",
+        "es": "Se dispara un evento de Graylog"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A new event of an event definition: an alert (with notifications) or a plain event.",
+        "fr": "Un nouvel événement d'une définition : une alerte (avec notifications) ou un simple événement.",
+        "de": "Ein neues Ereignis einer Definition: ein Alarm (mit Benachrichtigungen) oder ein einfaches Ereignis.",
+        "es": "Un nuevo evento de una definición: una alerta (con notificaciones) o un simple evento."
       },
       "fields": [
         {
           "key": "device",
-          "type": "select",
+          "type": "multi_select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Event definitions (empty: any)",
+            "fr": "Définitions d'événement (vide : toutes)",
+            "de": "Ereignisdefinitionen (leer: alle)",
+            "es": "Definiciones de evento (vacío: todas)"
+          },
+          "description": {
+            "en": "Only the devices added to Gladys can be chosen; empty works for every definition.",
+            "fr": "Seuls les appareils ajoutés à Gladys se choisissent ; vide vaut pour toutes les définitions.",
+            "de": "Nur die in Gladys angelegten Geräte sind wählbar; leer gilt für alle Definitionen.",
+            "es": "Solo se pueden elegir los dispositivos añadidos a Gladys; vacío vale para todas las definiciones."
+          }
         },
         {
-          "key": "target",
+          "key": "type",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Kind (empty: any)",
+            "fr": "Nature (vide : toutes)",
+            "de": "Art (leer: alle)",
+            "es": "Tipo (vacío: cualquiera)"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "alert",
+              "label": {
+                "en": "Alert",
+                "fr": "Alerte",
+                "de": "Alarm",
+                "es": "Alerta"
+              }
+            },
+            {
+              "value": "event",
+              "label": {
+                "en": "Event",
+                "fr": "Événement",
+                "de": "Ereignis",
+                "es": "Evento"
+              }
+            }
+          ]
+        },
+        {
+          "key": "priority",
+          "type": "multi_select",
+          "label": {
+            "en": "Priorities (empty: any)",
+            "fr": "Priorités (vide : toutes)",
+            "de": "Prioritäten (leer: alle)",
+            "es": "Prioridades (vacío: cualquiera)"
+          },
+          "options": [
+            {
+              "value": "1",
+              "label": {
+                "en": "Low",
+                "fr": "Basse",
+                "de": "Niedrig",
+                "es": "Baja"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "Normal",
+                "fr": "Normale",
+                "de": "Normal",
+                "es": "Normal"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "High",
+                "fr": "Haute",
+                "de": "Hoch",
+                "es": "Alta"
+              }
+            },
+            {
+              "value": "4",
+              "label": {
+                "en": "Critical",
+                "fr": "Critique",
+                "de": "Kritisch",
+                "es": "Crítica"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "definition",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Event definition",
+            "fr": "Définition d'événement",
+            "de": "Ereignisdefinition",
+            "es": "Definición de evento"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Message",
+            "fr": "Message",
+            "de": "Nachricht",
+            "es": "Mensaje"
+          }
+        },
+        {
+          "key": "type",
+          "type": "string",
+          "label": {
+            "en": "Kind (alert, event)",
+            "fr": "Nature (alert, event)",
+            "de": "Art (alert, event)",
+            "es": "Tipo (alert, event)"
+          }
+        },
+        {
+          "key": "priority_name",
+          "type": "string",
+          "label": {
+            "en": "Priority",
+            "fr": "Priorité",
+            "de": "Priorität",
+            "es": "Prioridad"
+          }
+        },
+        {
+          "key": "source",
+          "type": "string",
+          "label": {
+            "en": "Source",
+            "fr": "Source",
+            "de": "Quelle",
+            "es": "Origen"
+          }
+        },
+        {
+          "key": "event_key",
+          "type": "string",
+          "label": {
+            "en": "Event key",
+            "fr": "Clé de l'événement",
+            "de": "Ereignisschlüssel",
+            "es": "Clave del evento"
+          }
+        }
+      ]
+    },
+    {
+      "key": "input_failed",
+      "label": {
+        "en": "An input fails",
+        "fr": "Une entrée tombe en échec",
+        "de": "Ein Input fällt aus",
+        "es": "Una entrada falla"
+      },
+      "description": {
+        "en": "A Graylog input is FAILED, FAILING or badly configured: its messages are lost.",
+        "fr": "Une entrée Graylog passe FAILED, FAILING ou mal configurée : ses messages sont perdus.",
+        "de": "Ein Graylog-Input ist FAILED, FAILING oder falsch konfiguriert: Seine Nachrichten gehen verloren.",
+        "es": "Una entrada de Graylog pasa a FAILED, FAILING o mal configurada: sus mensajes se pierden."
+      },
+      "variables": [
+        {
+          "key": "input",
+          "type": "string",
+          "label": {
+            "en": "Input",
+            "fr": "Entrée",
+            "de": "Input",
+            "es": "Entrada"
+          }
+        },
+        {
+          "key": "input_type",
+          "type": "string",
+          "label": {
+            "en": "Input type",
+            "fr": "Type d'entrée",
+            "de": "Input-Typ",
+            "es": "Tipo de entrada"
+          }
+        },
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "State",
+            "fr": "État",
+            "de": "Zustand",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Error",
+            "fr": "Erreur",
+            "de": "Fehler",
+            "es": "Error"
+          }
+        }
+      ]
+    },
+    {
+      "key": "input_recovered",
+      "label": {
+        "en": "An input runs again",
+        "fr": "Une entrée repart",
+        "de": "Ein Input läuft wieder",
+        "es": "Una entrada vuelve a funcionar"
+      },
+      "description": {
+        "en": "A Graylog input announced failed is RUNNING again.",
+        "fr": "Une entrée Graylog signalée en échec est de nouveau RUNNING.",
+        "de": "Ein als ausgefallen gemeldeter Graylog-Input ist wieder RUNNING.",
+        "es": "Una entrada de Graylog notificada con fallo vuelve a estar RUNNING."
+      },
+      "variables": [
+        {
+          "key": "input",
+          "type": "string",
+          "label": {
+            "en": "Input",
+            "fr": "Entrée",
+            "de": "Input",
+            "es": "Entrada"
+          }
+        },
+        {
+          "key": "input_type",
+          "type": "string",
+          "label": {
+            "en": "Input type",
+            "fr": "Type d'entrée",
+            "de": "Input-Typ",
+            "es": "Tipo de entrada"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Duration (minutes)",
+            "fr": "Durée (minutes)",
+            "de": "Dauer (Minuten)",
+            "es": "Duración (minutos)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "storage_red",
+      "label": {
+        "en": "The storage turns red",
+        "fr": "Le stockage passe au rouge",
+        "de": "Der Speicher wird rot",
+        "es": "El almacenamiento pasa a rojo"
+      },
+      "description": {
+        "en": "The OpenSearch / Elasticsearch cluster of Graylog is red: messages are no longer stored.",
+        "fr": "Le cluster OpenSearch / Elasticsearch de Graylog est rouge : les messages ne sont plus stockés.",
+        "de": "Der OpenSearch-/Elasticsearch-Cluster von Graylog ist rot: Nachrichten werden nicht mehr gespeichert.",
+        "es": "El clúster OpenSearch / Elasticsearch de Graylog está en rojo: los mensajes ya no se almacenan."
+      },
+      "variables": [
+        {
+          "key": "address",
+          "type": "string",
+          "label": {
+            "en": "Address",
+            "fr": "Adresse",
+            "de": "Adresse",
+            "es": "Dirección"
+          }
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "label": {
+            "en": "Health",
+            "fr": "Santé",
+            "de": "Zustand",
+            "es": "Estado"
+          }
+        }
+      ]
+    },
+    {
+      "key": "storage_recovered",
+      "label": {
+        "en": "The storage is no longer red",
+        "fr": "Le stockage n'est plus rouge",
+        "de": "Der Speicher ist nicht mehr rot",
+        "es": "El almacenamiento ya no está en rojo"
+      },
+      "description": {
+        "en": "The storage announced red is yellow or green again.",
+        "fr": "Le stockage signalé rouge est de nouveau jaune ou vert.",
+        "de": "Der als rot gemeldete Speicher ist wieder gelb oder grün.",
+        "es": "El almacenamiento notificado en rojo vuelve a estar amarillo o verde."
+      },
+      "variables": [
+        {
+          "key": "address",
+          "type": "string",
+          "label": {
+            "en": "Address",
+            "fr": "Adresse",
+            "de": "Adresse",
+            "es": "Dirección"
+          }
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "label": {
+            "en": "Health (yellow, green)",
+            "fr": "Santé (yellow, green)",
+            "de": "Zustand (yellow, green)",
+            "es": "Estado (yellow, green)"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Duration (minutes)",
+            "fr": "Durée (minutes)",
+            "de": "Dauer (Minuten)",
+            "es": "Duración (minutos)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "graylog_unreachable",
+      "label": {
+        "en": "Graylog no longer answers",
+        "fr": "Graylog ne répond plus",
+        "de": "Graylog antwortet nicht mehr",
+        "es": "Graylog ya no responde"
+      },
+      "description": {
+        "en": "The Graylog REST API fails to answer twice in a row.",
+        "fr": "L'API REST de Graylog ne répond pas deux fois de suite.",
+        "de": "Die REST-API von Graylog antwortet zweimal hintereinander nicht.",
+        "es": "La API REST de Graylog no responde dos veces seguidas."
+      },
+      "variables": [
+        {
+          "key": "address",
+          "type": "string",
+          "label": {
+            "en": "Address",
+            "fr": "Adresse",
+            "de": "Adresse",
+            "es": "Dirección"
+          }
+        },
+        {
+          "key": "error",
+          "type": "string",
+          "label": {
+            "en": "Error",
+            "fr": "Erreur",
+            "de": "Fehler",
+            "es": "Error"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "get_alerts",
+      "label": {
+        "en": "Read the latest alerts",
+        "fr": "Lire les dernières alertes",
+        "de": "Letzte Alarme lesen",
+        "es": "Leer las últimas alertas"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Counts and lists the alerts (or events) of the last 24 hours, of one definition or of all.",
+        "fr": "Compte et liste les alertes (ou événements) des dernières 24 heures, d'une définition ou de toutes.",
+        "de": "Zählt und listet die Alarme (oder Ereignisse) der letzten 24 Stunden, einer Definition oder aller.",
+        "es": "Cuenta y enumera las alertas (o eventos) de las últimas 24 horas, de una definición o de todas."
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Event definition (empty: all)",
+            "fr": "Définition d'événement (vide : toutes)",
+            "de": "Ereignisdefinition (leer: alle)",
+            "es": "Definición de evento (vacío: todas)"
+          },
+          "description": {
+            "en": "Only the devices added to Gladys can be chosen; empty works for every definition.",
+            "fr": "Seuls les appareils ajoutés à Gladys se choisissent ; vide vaut pour toutes les définitions.",
+            "de": "Nur die in Gladys angelegten Geräte sind wählbar; leer gilt für alle Definitionen.",
+            "es": "Solo se pueden elegir los dispositivos añadidos a Gladys; vacío vale para todas las definiciones."
+          },
+          "required": false
+        },
+        {
+          "key": "include",
+          "type": "select",
+          "label": {
+            "en": "What (empty: alerts only)",
+            "fr": "Quoi (vide : alertes seulement)",
+            "de": "Was (leer: nur Alarme)",
+            "es": "Qué (vacío: solo alertas)"
+          },
+          "options": [
+            {
+              "value": "alerts",
+              "label": {
+                "en": "Alerts only",
+                "fr": "Alertes seulement",
+                "de": "Nur Alarme",
+                "es": "Solo alertas"
+              }
+            },
+            {
+              "value": "all",
+              "label": {
+                "en": "Alerts and events",
+                "fr": "Alertes et événements",
+                "de": "Alarme und Ereignisse",
+                "es": "Alertas y eventos"
+              }
+            }
+          ],
+          "required": false
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Number",
+            "fr": "Nombre",
+            "de": "Anzahl",
+            "es": "Número"
+          }
+        },
+        {
+          "key": "last_title",
+          "type": "string",
+          "label": {
+            "en": "Last: definition",
+            "fr": "Dernière : définition",
+            "de": "Letzte: Definition",
+            "es": "Última: definición"
+          }
+        },
+        {
+          "key": "last_message",
+          "type": "string",
+          "label": {
+            "en": "Last: message",
+            "fr": "Dernière : message",
+            "de": "Letzte: Nachricht",
+            "es": "Última: mensaje"
+          }
+        },
+        {
+          "key": "minutes_ago",
+          "type": "number",
+          "label": {
+            "en": "Last: minutes ago (-1: none)",
+            "fr": "Dernière : il y a (minutes, -1 : aucune)",
+            "de": "Letzte: vor Minuten (-1: keine)",
+            "es": "Última: hace minutos (-1: ninguna)"
+          }
+        },
+        {
+          "key": "names",
+          "type": "string",
+          "label": {
+            "en": "List (definition (time))",
+            "fr": "Liste (définition (heure))",
+            "de": "Liste (Definition (Uhrzeit))",
+            "es": "Lista (definición (hora))"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "alerts",
+      "label": {
+        "en": "Graylog alerts",
+        "fr": "Alertes Graylog",
+        "de": "Graylog-Alarme",
+        "es": "Alertas de Graylog"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Recent alerts, failed inputs, storage and throughput of your Graylog.",
+        "fr": "Alertes récentes, entrées en échec, stockage et débit de votre Graylog.",
+        "de": "Letzte Alarme, fehlerhafte Inputs, Speicher und Durchsatz deines Graylog.",
+        "es": "Alertas recientes, entradas con fallo, almacenamiento y caudal de su Graylog."
+      },
+      "icon": "bell",
+      "action_timeout_seconds": 30,
+      "settings": [
+        {
+          "key": "definitions",
+          "type": "multi_select",
+          "source": "devices",
+          "label": {
+            "en": "Event definitions (empty: all)",
+            "fr": "Définitions d'événement (vide : toutes)",
+            "de": "Ereignisdefinitionen (leer: alle)",
+            "es": "Definiciones de evento (vacío: todas)"
+          },
+          "description": {
+            "en": "Only the devices added to Gladys can be chosen.",
+            "fr": "Seuls les appareils ajoutés à Gladys se choisissent.",
+            "de": "Nur die in Gladys angelegten Geräte sind wählbar.",
+            "es": "Solo se pueden elegir los dispositivos añadidos a Gladys."
+          },
+          "required": false
+        },
+        {
+          "key": "include",
+          "type": "select",
+          "label": {
+            "en": "Rows",
+            "fr": "Lignes",
+            "de": "Zeilen",
+            "es": "Filas"
+          },
+          "options": [
+            {
+              "value": "alerts",
+              "label": {
+                "en": "Alerts only",
+                "fr": "Alertes seulement",
+                "de": "Nur Alarme",
+                "es": "Solo alertas"
+              }
+            },
+            {
+              "value": "all",
+              "label": {
+                "en": "Alerts and events",
+                "fr": "Alertes et événements",
+                "de": "Alarme und Ereignisse",
+                "es": "Alertas y eventos"
+              }
+            }
+          ],
+          "required": false,
+          "default": "alerts"
+        }
+      ]
     }
   ]
 }

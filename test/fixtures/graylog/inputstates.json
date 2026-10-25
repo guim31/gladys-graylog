@@ -1,0 +1,73 @@
+{
+  "00000000-0000-4000-8000-000000000001": [
+    {
+      "id": "6add98efd5cba37b30f1227e",
+      "state": "RUNNING",
+      "started_at": "2026-10-25T05:51:43.146Z",
+      "detailed_message": null,
+      "message_input": {
+        "title": "GELF HTTP",
+        "global": true,
+        "name": "GELF HTTP",
+        "content_pack": null,
+        "created_at": "2026-10-25T05:51:43.054Z",
+        "type": "org.graylog2.inputs.gelf.http.GELFHttpInput",
+        "creator_user_id": "admin",
+        "attributes": {
+          "recv_buffer_size": 1048576,
+          "port": 12201,
+          "bind_address": "0.0.0.0"
+        },
+        "static_fields": {},
+        "node": null,
+        "id": "6add98efd5cba37b30f1227e"
+      }
+    },
+    {
+      "id": "6add98efd5cba37b30f12283",
+      "state": "RUNNING",
+      "started_at": "2026-10-25T05:51:43.268Z",
+      "detailed_message": null,
+      "message_input": {
+        "title": "Syslog UDP",
+        "global": true,
+        "name": "Syslog UDP",
+        "content_pack": null,
+        "created_at": "2026-10-25T05:51:43.235Z",
+        "type": "org.graylog2.inputs.syslog.udp.SyslogUDPInput",
+        "creator_user_id": "admin",
+        "attributes": {
+          "recv_buffer_size": 262144,
+          "port": 5140,
+          "bind_address": "0.0.0.0"
+        },
+        "static_fields": {},
+        "node": null,
+        "id": "6add98efd5cba37b30f12283"
+      }
+    },
+    {
+      "id": "6add98f8d5cba37b30f12291",
+      "state": "FAILED",
+      "started_at": "2026-10-25T05:51:52.675Z",
+      "detailed_message": "bind(..) failed: Address already in use.",
+      "message_input": {
+        "title": "Broken GELF TCP",
+        "global": true,
+        "name": "GELF TCP",
+        "content_pack": null,
+        "created_at": "2026-10-25T05:51:52.654Z",
+        "type": "org.graylog2.inputs.gelf.tcp.GELFTCPInput",
+        "creator_user_id": "admin",
+        "attributes": {
+          "recv_buffer_size": 1048576,
+          "port": 12201,
+          "bind_address": "0.0.0.0"
+        },
+        "static_fields": {},
+        "node": null,
+        "id": "6add98f8d5cba37b30f12291"
+      }
+    }
+  ]
+}

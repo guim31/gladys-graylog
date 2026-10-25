@@ -1,0 +1,31 @@
+{
+  "00000000-0000-4000-8000-000000000001": {
+    "total": 3,
+    "metrics": [
+      {
+        "full_name": "org.graylog2.throughput.input.1-sec-rate",
+        "metric": {
+          "value": 0.0
+        },
+        "name": "1-sec-rate",
+        "type": "gauge"
+      },
+      {
+        "full_name": "org.graylog2.throughput.output.1-sec-rate",
+        "metric": {
+          "value": 0.0
+        },
+        "name": "1-sec-rate",
+        "type": "gauge"
+      },
+      {
+        "full_name": "org.graylog2.journal.entries-uncommitted",
+        "metric": {
+          "value": 0
+        },
+        "name": "entries-uncommitted",
+        "type": "gauge"
+      }
+    ]
+  }
+}
